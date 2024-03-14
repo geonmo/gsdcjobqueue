@@ -1,3 +1,6 @@
+"""
+Dask jobqueue Cluster for GSDC HTCondor system
+"""
 import asyncio
 import logging
 import os
@@ -11,35 +14,31 @@ import pwd
 
 import dask
 import yaml
-from dask_jobqueue.htcondor import (
-    HTCondorCluster,
-    HTCondorJob,
-    quote_arguments,
-    quote_environment,
-)
-from .schedd import SCHEDD, SCHEDD_POOL, htcondor
+from dask_jobqueue.htcondor import HTCondorCluster
+from lpcjobqueue import LPCCondordJob
 
 
 
 logger = logging.getLogger(__name__)
-fn = os.path.join(os.path.dirname(__file__), "config.yaml")
+config = os.path.join(os.path.dirname(__file__), "config.yaml")
 
-with open(fn) as f:
+with open(config,"r",encoding="utf-8") as f:
     defaults = yaml.safe_load(f)
 
 dask.config.update(dask.config.config, defaults, priority="new")
 
 
 def is_venv():
-    return hasattr(sys, "real_prefix") or (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)
+    """
+    virtualenv 상태인지를 확인하여 boolean으로 리턴
+    """
+    return hasattr(sys, "real_prefix") or \
+           (hasattr(sys, "base_prefix") \
+           and sys.base_prefix != sys.prefix)
 
 
-class GSDCCondorJob(HTCondorJob):
-    executable = os.path.dirname(os.path.abspath(__file__)) + '/condor_exec.exe'
+class GSDCCondorJob(LPCCondorJob):
     config_name = "gsdccondor"
-    known_jobs = set()
-    env_name = os.path.basename(os.getenv('VIRTUAL_ENV', '.env'))
-
     def __init__(
         self,
         scheduler=None,
@@ -49,31 +48,12 @@ class GSDCCondorJob(HTCondorJob):
         image,
         **base_class_kwargs,
     ):
-        if ship_env:
-            base_class_kwargs["python"] = f"{self.env_name}/bin/python"
-            base_class_kwargs.setdefault(
-                "worker_extra_args", list(dask.config.get("jobqueue.%s.worker_extra_args" % self.config_name))
-            )
-            base_class_kwargs["worker_extra_args"].extend(["--preload", "gsdcjobqueue.patch"])
-        else:
-            base_class_kwargs["python"] = "python"
-        super().__init__(scheduler=scheduler, name=name, **base_class_kwargs)
-        if self.log_directory:
-            if not any(
-                os.path.commonprefix([self.log_directory, p]) == p
-                for p in GSDCCondorCluster.schedd_safe_paths
-            ):
-                raise ValueError(
-                    f"log_directory must be a subpath of one of {GSDCCondorCluster.schedd_safe_paths} or else the schedd cannot write our logs back to the container"
-                )
-
+        super().__init__(scheduler=scheduler, name=name, ship_env=ship_env, image=image, **base_class_kwargs)
         self.job_header_dict.update(
             {
                 "when_to_transfer_output": "ON_EXIT_OR_EVICT",
                 "transfer_output_files": "",
                 "container_image": f"{image}",
-                "universe":"container",
-                "accounting_group": "group_cms",
                 "should_transfer_files": "YES",
             }
         )

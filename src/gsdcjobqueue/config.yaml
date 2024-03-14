@@ -22,7 +22,7 @@ jobqueue:
     log-directory: null
     env-extra: null
     job-script-prologue: []
-    job-extra-directives: {}    # Extra submit attributes
+    job-extra-directives: {"accounting_group":"group_cms","universe":"container"}    # Extra submit attributes
     job-directives-skip: []
     submit-command-extra: []    # Extra condor_submit arguments
     cancel-command-extra: []    # Extra condor_rm arguments
