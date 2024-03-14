@@ -5,13 +5,12 @@ cat <<EOF > shell
 
 
 if [ "\$1" == "" ]; then
-  export COFFEA_IMAGE=coffeateam/coffea-dask:latest
+  export COFFEA_IMAGE=/cms/container_images/coffea-dask-cc7.sif
 else
   export COFFEA_IMAGE=\$1
 fi
 
-SINGULARITY_SHELL=\$(which bash) singularity exec -B \${PWD}:/srv -B /cvmfs -B /cms_scratch -B /etc/condor --pwd /srv \\
-  /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
+APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv -B /cvmfs -B /cms_scratch -B /etc/condor --pwd /srv \${COFFEA_IMAGE} \\
   /bin/bash --rcfile /srv/.bashrc
 EOF
 

@@ -2,5 +2,21 @@
 requires = ["wheel", "setuptools>=42", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "gsdcjobqueue"
+version = "2024.3.14"
+dependencies = [
+  "lpcjobqueue@git+https://github.com/CoffeaTeam/lpcjobqueue.git#egg=main",
+]
+requires-python = ">=3.10"
+authors = [
+  { name = "Geonmo Ryu", email="geonmo@kisti.re.kr"},
+]
+maintainers = [
+  { name = "Geonmo Ryu", email="geonmo@kisti.re.kr"},
+]
+description = "gsdcjobqueue from lpcjobqueue"
+
+
 [tool.setuptools_scm]
 write_to = "src/gsdcjobqueue/version.py"
