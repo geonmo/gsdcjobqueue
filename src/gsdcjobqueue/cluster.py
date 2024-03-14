@@ -15,7 +15,7 @@ import pwd
 import dask
 import yaml
 from dask_jobqueue.htcondor import HTCondorCluster
-from lpcjobqueue import LPCCondordJob
+from lpcjobqueue import LPCCondorJob
 
 
 
